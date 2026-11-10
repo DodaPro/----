@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="ar" dir="rtl" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تطبيق الإدارة العامة التفاعلي - د. هبة عبدالسلام</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              arabic: ["Cairo", "Tajawal", "sans-serif"],
+            },
+            colors: {
+              primary: "#2563eb",
+              secondary: "#10b981",
+              darkBg: "#0f172a",
+              darkCard: "#1e293b",
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- FontAwesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+    <style>
+      body {
+        font-family: "Cairo", sans-serif;
+        transition:
+          background-color 0.3s,
+          color 0.3s;
+      }
+
+      /* Notebook Table Style */
+      .notebook-table {
+        width: 100%;
+        border-collapse: collapse;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+      .notebook-table th {
+        background-color: #f3f4f6;
+        color: #1f2937;
+        font-weight: 700;
+        padding: 12px;
+        border: 1px solid #e5e7eb;
+      }
+      .dark .notebook-table th {
+        background-color: #334155;
+        color: #f8fafc;
+        border-color: #475569;
+      }
+      .notebook-table td {
+        padding: 12px;
+        border: 1px solid #e5e7eb;
+        background-color: #ffffff;
+      }
+      .dark .notebook-table td {
+        background-color: #1e293b;
+        border-color: #475569;
+        color: #cbd5e1;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+
+      .tab-btn.active {
+        border-bottom: 3px solid #2563eb;
+        color: #2563eb;
+        font-weight: 700;
+      }
+      .dark .tab-btn.active {
+        border-bottom: 3px solid #60a5fa;
+        color: #60a5fa;
+      }
+
+      .btn-locked {
+        pointer-events: none;
+        opacity: 0.6;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-50 text-gray-800 dark:bg-darkBg dark:text-gray-100 min-h-screen"
+  >
+    <!-- Header (Sticky) -->
+    <header
+      class="sticky top-0 z-40 bg-white dark:bg-darkCard shadow-md transition-colors duration-300"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center"
+      >
+        <div class="flex items-center gap-3">
+          <div class="bg-primary text-white p-2 rounded-lg">
+            <i class="fa-solid fa-graduation-cap text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-xl md:text-2xl font-bold leading-tight">
+              الإدارة العامة
+            </h1>
+            <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">
+              د/ هبة عبدالسلام - معاهد الوادي العليا
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4 md:gap-6">
+          <!-- Live Score Tracker -->
+          <div
+            class="flex flex-col items-center bg-gray-100 dark:bg-gray-800 px-4 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700"
+          >
+            <span class="text-xs text-gray-500 dark:text-gray-400 font-semibold"
+              >الإجابات الصحيحة</span
+            >
+            <div class="text-lg md:text-xl font-bold text-secondary">
+              <span id="score-correct">0</span> /
+              <span id="score-total">0</span>
+            </div>
+          </div>
+
+          <!-- Dark Mode Toggle -->
+          <button
+            onclick="toggleDarkMode()"
+            class="text-gray-500 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 transition-colors text-2xl focus:outline-none"
+          >
+            <i id="theme-icon" class="fa-solid fa-moon"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-6 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-700"
+      >
+        <button
+          onclick="switchTab('mcq')"
+          id="tab-mcq"
+          class="tab-btn active pb-3 px-2 text-sm md:text-base font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap transition-colors"
+        >
+          <i class="fa-solid fa-list-check ml-1"></i> الاختيار من متعدد
+        </button>
+        <button
+          onclick="switchTab('tf')"
+          id="tab-tf"
+          class="tab-btn pb-3 px-2 text-sm md:text-base font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap transition-colors"
+        >
+          <i class="fa-solid fa-check-double ml-1"></i> صواب أم خطأ
+        </button>
+        <button
+          onclick="switchTab('essay')"
+          id="tab-essay"
+          class="tab-btn pb-3 px-2 text-sm md:text-base font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap transition-colors"
+        >
+          <i class="fa-solid fa-pen-nib ml-1"></i> الأسئلة المقالية
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Section: MCQ -->
+      <div id="section-mcq" class="space-y-6">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Section: True/False -->
+      <div id="section-tf" class="space-y-6 hidden">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Section: Essay -->
+      <div id="section-essay" class="space-y-8 hidden">
+        <!-- Rendered via JS -->
+      </div>
+    </main>
+
+    <!-- Periodic Zikr Modal (Every 5 Minutes) -->
+    <div
+      id="zikr-modal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden backdrop-blur-sm transition-opacity"
+    >
+      <div
+        class="bg-white dark:bg-darkCard rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center transform scale-95 transition-transform duration-300"
+        id="zikr-content"
+      >
+        <div class="text-4xl text-primary mb-4">
+          <i class="fa-solid fa-hands-praying"></i>
+        </div>
+        <h3 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">
+          فاصل إيماني يجدد النشاط
+        </h3>
+        <p
+          id="zikr-text"
+          class="text-xl leading-relaxed text-gray-600 dark:text-gray-300 font-semibold mb-8"
+        >
+          اللهم لا سهل إلا ما جعلته سهلاً، وأنت تجعل الحزن إذا شئت سهلاً.
+        </p>
+        <button
+          onclick="closeZikrModal()"
+          class="w-full bg-secondary hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg"
+        >
+          آمين يا رب (إتمام العودة للدراسة)
+        </button>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+      // --- Data Sources (Based strictly on the provided PDF and Slides) ---
+
+      const mcqData = [
+        {
+          id: "m1",
+          q: "من أمثلة التخطيط الإداري في العصر الإسلامي:",
+          options: [
+            "بناء الأهرام",
+            "تخطيط الرسول للهجرة من مكة إلى المدينة",
+            "إنشاء مجلس الشيوخ",
+            "امتحان الخدمة المدنية في الصين",
+          ],
+          ans: 1,
+          hint: "حدث إسلامي عظيم يمثل التأسيس لدولة جديدة.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (ب) تخطيط الرسول للهجرة من مكة إلى المدينة.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> يعد تخطيط النبي ﷺ للهجرة نموذجاً إدارياً متكاملاً؛ حيث تميز باختيار القرار المناسب وتحديد التوقيت الدقيق، ووضع خطة أساسية وأخرى طارئة للظروف غير المتوقعة وتوزيع المهام بدقة.",
+        },
+        {
+          id: "m2",
+          q: "من الدواوين التي نشأت في ظل العصر الإسلامي:",
+          options: [
+            "ديوان الخراج وديوان الجند وديوان البريد",
+            "ديوان الصناعة فقط",
+            "ديوان الانتخابات",
+            "ديوان الجامعات",
+          ],
+          ans: 0,
+          hint: "دواوين ارتبطت بالمالية والجيش والاتصالات.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (أ) ديوان الخراج وديوان الجند وديوان البريد.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> شهد العصر الإسلامي تطوراً إدارياً بتأسيس الدواوين لتنظيم شؤون الدولة؛ فديوان الخراج لجمع الأموال والموارد، وديوان الجند لتنظيم الجيش وصرف العطايا، وديوان البريد لتأمين اتصالات الدولة.",
+        },
+        {
+          id: "m3",
+          q: "أي مما يلي يُعد من مبادئ هنري فايول الأربعة عشر؟",
+          options: [
+            "وحدة الأمر",
+            "إلغاء السلطة",
+            "إلغاء التخصص",
+            "عدم المساواة بين الأفراد",
+          ],
+          ans: 0,
+          hint: "الموظف يجب أن يتلقى تعليمات من شخص واحد فقط.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (أ) وحدة الأمر.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> ينص مبدأ 'وحدة الأمر' لدى هنري فايول على أن الموظف في التنظيم يجب أن يتلقى التعليمات والأوامر من رئيس واحد فقط لتفادي التضارب الإداري، بينما يتعلق مبدأ 'وحدة التوجيه' بنشاط المنظمة ككل.",
+        },
+        {
+          id: "m4",
+          q: "ارتبط تاريخ الإدارة العامة في بداياته ارتباطا وثيقا بـ:",
+          options: [
+            "الحضارة اليونانية",
+            "الحضارة المصرية القديمة",
+            "الحضارة الرومانية",
+            "العصر الحديث",
+          ],
+          ans: 1,
+          hint: "بناة الأهرامات وتنظيم النيل.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (ب) الحضارة المصرية القديمة.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> ترتبط الإدارة العامة تاريخياً بالحضارة الفرعونية حيث طبقت الدولة المصرية إدارة حكومية منظمة على نطاق واسع لإدارة المشاريع القومية كالأهرامات وتوزيع الموارد الزراعية.",
+        },
+        {
+          id: "m5",
+          q: "كان من أسباب استخدام التركيز الإداري في مصر القديمة:",
+          options: [
+            "تنظيم توزيع المياه والمحافظة على طرق المواصلات",
+            "زيادة التجارة الخارجية فقط",
+            "تنظيم الانتخابات",
+            "إنشاء الجامعات",
+          ],
+          ans: 0,
+          hint: "ارتبط بشريان الحياة في مصر وهو نهر النيل.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (أ) تنظيم توزيع المياه والمحافظة على طرق المواصلات.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> فرضت الطبيعة الزراعية لمصر والاعتماد على مياه نهر النيل ضرورة الأخذ بالمركزية والتركيز الإداري من قبل الملوك لتنظيم توزيع المياه والمحافظة على المواصلات والري.",
+        },
+        {
+          id: "m6",
+          q: "اشترط الصينيون قديمًا للتعيين في وظائف الحكومة:",
+          options: [
+            "الانتماء إلى طبقة معينة",
+            "الحصول على موافقة الجيش",
+            "اجتياز امتحان الخدمة المدنية",
+            "امتلاك ثروة كبيرة",
+          ],
+          ans: 2,
+          hint: "نظام قائم على تقييم الكفاءات والمؤهلات.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (ج) اجتياز امتحان الخدمة المدنية.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> تُعتبر الحضارة الصينية القديمة أول من اشترط لتقلد الوظائف الحكومية اجتياز اختبارات الخدمة المدنية التي تراعى فيها المؤهلات العلمية والتجارب العملية بدلاً من الطبقية أو الثروة.",
+        },
+        {
+          id: "m7",
+          q: "يرى أرسطو أن الحكومة الجيدة هي التي:",
+          options: [
+            "تحقق مصلحة طبقة واحدة",
+            "تلغي اختلاف طبقات المجتمع",
+            "تمنح السلطة للجيش",
+            "توفق بين المصالح المتعارضة لطبقات المجتمع",
+          ],
+          ans: 3,
+          hint: "التي تخلق التوازن بين طبقات المجتمع المختلفة.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (د) توفق بين المصالح المتعارضة لطبقات المجتمع.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> يعترف أرسطو بوجود طبقات اجتماعية متعددة تنظر للحكومة بنظرات مختلفة، ويرى أن الحكومة الجيدة هي التي تستطيع التوفيق والموازنة بين هذه المصالح المتعارضة.",
+        },
+        {
+          id: "m8",
+          q: "تسعى الإدارة العامة بالمجتمعات والدول المعاصرة أياً كانت أنظمتها إلى:",
+          options: [
+            "تحقيق رفاهية المواطن",
+            "توزيع الموارد",
+            "مواجهة الازمات",
+            "جميع ما سبق",
+          ],
+          ans: 3,
+          hint: "لا يقتصر دورها على هدف واحد.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (D) جميع ما سبق.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> الإدارة العامة أداة تنموية شاملة تسعى في جميع الدول إلى كفالة رفاهية المواطنين، وتوزيع الموارد، والتصدي للأزمات والكوارث.",
+        },
+        {
+          id: "m9",
+          q: "يوجد اختلاف بين الدور المعطى لكل من منظمات الأعمال والمنظمات العامة من دولة لأخرى.",
+          options: ["عبارة صحيحة", "عبارة خاطئة"],
+          ans: 0,
+          hint: "الدور يتأثر بالبيئة والنظام السياسي والدولي.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (A) عبارة صحيحة.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> يختلف دور ووظيفة الإدارة العامة والمنظمات الحكومية مقارنة بالقطاع الخاص من دولة لخرى بناءً على النظام السياسي والاقتصادي والفلسفة المتبعة.",
+        },
+        {
+          id: "m10",
+          q: "الإدارة العامة يمكن اعتبارها نظام system يتكون من ترابط:",
+          options: [
+            "التخطيط والتنظيم",
+            "الهيكل والعمليات",
+            "الرقابة والتوجيه",
+            "البيئة الادارية",
+          ],
+          ans: 3,
+          hint: "النظام يتأثر بقوى محيطة به.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (D) البيئة الإدارية.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> طبقاً لـ 'منهج النظم'، تعتبر الإدارة العامة نظاماً متكاملاً يتكون من ترابط البيئة الإدارية المحيطة، وتتكون من مدخلات وعمليات تحويل ومخرجات وتغذية مرتدة.",
+        },
+        {
+          id: "m11",
+          q: "تتسم الإدارة العامة بأن غرض انشاؤها يكون:",
+          options: [
+            "اشباع حاجة المجتمع",
+            "هدف اقتصادي",
+            "هدف اجتماعي",
+            "جميع ما سبق",
+          ],
+          ans: 3,
+          hint: "أهدافها شاملة لخدمة المجتمع من كافة النواحي.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (D) جميع ما سبق.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> تنشأ الإدارة العامة لغرض أساسي هو إشباع حاجات المجتمع، وتتكامل في أهدافها بين الجوانب الاقتصادية والاجتماعية والتنظيمية.",
+        },
+        {
+          id: "m12",
+          q: "المنظمات العامة تنشأ في الأصل لخدمة المجتمع، فإنها تصبح جزءاً منه، وبالتالي فإنها تتأثر بالظروف الاجتماعية والمادية السائدة في هذا المجتمع.",
+          options: ["العبارة صحيحة", "العبارة خاطئة"],
+          ans: 0,
+          hint: "الإدارة لا تعمل بمعزل عن المجتمع.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (A) العبارة صحيحة.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> الإدارة العامة ليست كياناً معزولاً؛ فهي تنشأ لخدمة المجتمع وتستمد قيمها وظروفها من البيئة الاجتماعية والمادية السائدة فيه.",
+        },
+        {
+          id: "m13",
+          q: "المنظمات والأجهزة الحكومية نجد إنها تملك سلطات ..... للمؤسسات الخاصة.",
+          options: ["تتوافر", "لا تتوافر", "تساوي", "جميع ما سبق"],
+          ans: 1,
+          hint: "السلطات السيادية كفرض الضرائب واللوائح الإلزامية.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (B) لا تتوافر.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> تتميز الأجهزة الحكومية بامتلاك سلطات سيادية رسمية لا تتوافر مطلقاً للمؤسسات الخاصة، مثل تدبير الأموال بالضرائب وتنظيم سلوك أفراد المجتمع ككل.",
+        },
+        {
+          id: "m14",
+          q: "تنبع أهمية تفعيل دور الإدارة العامة في:",
+          options: [
+            "تشعب وظائف الدولة",
+            "التقدم التكنولوجي",
+            "علاج التعقيد الاداري",
+            "جميع ما سبق",
+          ],
+          ans: 3,
+          hint: "كل هذه العوامل أدت لضرورة تفعيل الإدارة العامة.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (D) جميع ما سبق.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> تزداد أهمية تفعيل الإدارة العامة بسبب التقدم التكنولوجي والحاجة للتنمية، وتعدد وتشعب وظائف الدولة الحديثة، والحد من التعقيد الإداري والأمراض الوظيفية.",
+        },
+        {
+          id: "m15",
+          q: "استخدام ..... بالمجال الحكومي لها تأثيرها الإيجابي ويستلزم إعادة توزيع العمل وتغيير نوعية العمالة.",
+          options: [
+            "التكنولوجيا",
+            "الإدارة العامة",
+            "المنظمات الخاصة",
+            "لا شيء مما سبق",
+          ],
+          ans: 0,
+          hint: "الأدوات الحديثة والأنشطة الرقمية.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (A) التكنولوجيا.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> إدخال التكنولوجيا في المجال الحكومي يؤدي لتطوير الخدمات ويفرض إعادة توزيع العمل وتأهيل وتدريب نوعية العمالة لتتناسب مع التحول الرقمي.",
+        },
+        {
+          id: "m16",
+          q: "اتساع مساحة الدولة وصعوبة الاتصال بين أجزائها يستلزم الأخذ بأسلوب ...... الإدارية.",
+          options: ["المركزية", "المشاركة", "اللامركزية", "السلطة"],
+          ans: 2,
+          hint: "تفويض الصلاحيات للأقاليم لتسهيل العمل.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (C) اللامركزية.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> في بند 'العوامل الجغرافية'، يتسبب اتساع رقعة الدولة وصعوبة الاتصال في ضرورة الأخذ باللامركزية الإدارية لتسهيل اتخاذ القرارات وإدارة الشؤون المحلية.",
+        },
+        {
+          id: "m17",
+          q: "لا تحدد الموارد الطبيعية التي تتوافر لدى الدولة طبيعة الأعمال والمشروعات وخطط التنمية بها.",
+          options: ["العبارة صحيحة", "العبارة خاطئة"],
+          ans: 1,
+          hint: "الموارد هي محدد رئيسي لخطط التنمية.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (B) العبارة خاطئة.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> الموارد الطبيعية والمادية المتوفرة لدى الدولة هي التي تحدد بشكل مباشر نوع المشروعات وطبيعة خطط التنمية الاقتصادية والإدارية.",
+        },
+        {
+          id: "m18",
+          q: "توافر العنصر البشرى ....... بالجهاز الإداري للدولة يساعد علي تحقيق أهداف خطط التنمية بكفاءة عالية.",
+          options: ["المثقف علمياً", "المؤهل مهنياً", "المدرب", "جميع ما سبق"],
+          ans: 3,
+          hint: "التكامل بين الإعداد العلمي والمهني والتدريبي.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (D) جميع ما سبق.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> الكفاءة الإدارية لتنفيذ التنمية تتطلب توفر عنصر بشري جامع بين الثقافة العلمية، التأهيل المهني، والتدريب الإداري المستمر.",
+        },
+        {
+          id: "m19",
+          q: "يؤدى المستوى المنخفض للأجور بالجهاز الإداري للدول إلى احتمال يتعلق بالإدارة العامة. فيما .....",
+          options: [
+            "الالتزام الإداري",
+            "عدم الالتزام بالقوانين",
+            "ارتفاع مستوى الخدمة",
+            "جميع ما سبق",
+          ],
+          ans: 1,
+          hint: "من أبرز السلبيات الناتجة عن انخفاض الرواتب.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (B) عدم الالتزام بالقوانين.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> انخفاض مستوى الأجور بالجهاز الحكومي يضعف الانضباط الوظيفي ويرفع احتمالية عدم الالتزام بالقوانين واللوائح وانتشار الفساد الإداري.",
+        },
+        {
+          id: "m20",
+          q: "التنمية الإدارية والاقتصادية ضمن الإدارة العامة بالدول عمليتان غير متلازمتان ولا تؤثر كل منهما في الأخرى.",
+          options: ["العبارة صحيحة", "العبارة خاطئة"],
+          ans: 1,
+          hint: "لا يمكن الاستغناء بـ أحدهما عن الآخر.",
+          explanation:
+            "<strong>الإجابة الصحيحة: (B) العبارة خاطئة.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> التنمية الإدارية والاقتصادية عمليتان متلازمتان تماماً؛ إذ لا يمكن التخطيط للتنمية الاقتصادية بدون جهاز إداري كفء، وتطوير الجهاز الإداري يتطلب بدوره تنمية اقتصادية.",
+        },
+      ];
+
+      const tfData = [
+        {
+          id: "t1",
+          q: "ارتبط تاريخ الإدارة العامة بالحضارة المصرية القديمة.",
+          ans: true,
+          hint: "تذكر بناء الأهرامات وتوزيع مياه النيل.",
+          explanation:
+            "<strong>الإجابة: عبارة صحيحة.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> ارتبطت الإدارة العامة بالحضارة المصرية القديمة التي طبقت نظاماً إدارياً حكومياً منظماً على نطاق واسع لإدارة المشاريع الزراعية والمرافق.",
+        },
+        {
+          id: "t2",
+          q: "لم يكن لنهر النيل أي تأثير على التنظيم الإداري في مصر القديمة.",
+          ans: false,
+          hint: "هل يمكن إغفال أهمية النيل للمصريين؟",
+          explanation:
+            "<strong>الإجابة: عبارة خاطئة.</strong><br><em>التصحيح الشامل:</em> كان الاعتماد على مياه النيل والطبيعة الزراعية السبب الرئيسي للحاجة إلى التنظيم والتركيز الإداري لتوزيع المياه وإقامة السدود والمحافظة على النقل.",
+        },
+        {
+          id: "t3",
+          q: "كان الصينيون من أوائل من اشترطوا اجتياز امتحان الخدمة المدنية للتعيين في وظائف الحكومة.",
+          ans: true,
+          hint: "الصين أسبق الدول في امتحانات الخدمة المدنية.",
+          explanation:
+            "<strong>الإجابة: عبارة صحيحة.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> تعتبر الحضارة الصينية القديمة سباقة في اشتراط اجتياز امتحان الخدمة المدنية القائم على المؤهلات العلمية والتجارب لتقلد الوظائف الحكومية.",
+        },
+        {
+          id: "t4",
+          q: "نادي ميكافيللي بضرورة الفصل بين النظرية السياسية والنظريات الأخلاقية.",
+          ans: true,
+          hint: "مبدأ الاستراتيجية وفصل السياسة عن الأخلاق.",
+          explanation:
+            "<strong>الإجابة: عبارة صحيحة.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> نادى ميكافيللي في العصور الوسطى بضرورة الفصل بين النظريات السياسية والإدارية والنظريات الأخلاقية، واعتبر أن الإدارة والسياسة أمور استراتيجية تستهدف تحقيق غايات الدولة.",
+        },
+        {
+          id: "t5",
+          q: "تعتبر الشورى في الفكر الإسلامي من الطرق المتبعة في حل مشكلات المجتمع.",
+          ans: true,
+          hint: "مبدأ قرآني وأساس إداري في الدولة الإسلامية.",
+          explanation:
+            "<strong>الإجابة: عبارة صحيحة.</strong><br><em>الشرح التفصيلي من المحاضرات:</em> يعد مبدأ الشورى والمشاركة الجماعية من أهم الإسهامات الإدارية في الفكر الإسلامي لحل مشكلات المجتمع واتخاذ القرارات.",
+        },
+        {
+          id: "t6",
+          q: "لم تعرف الحضارة الإسلامية أي صور للتخطيط الإداري.",
+          ans: false,
+          hint: "تذكر هجرة النبي عليه الصلاة والسلام.",
+          explanation:
+            "<strong>الإجابة: عبارة خاطئة.</strong><br><em>التصحيح الشامل:</em> عرفت الحضارة الإسلامية التخطيط الإداري بأعلى مستوياته، ومن أبرز الأمثلة تخطيط الرسول ﷺ للهجرة من مكة إلى المدينة وتأسيس الدواوين المتخصصة.",
+        },
+      ];
+
+      const essayData = [
+        {
+          id: "e1",
+          q: "السؤال الأول: ناقش أربعة من خصائص الإدارة العامة؟ مع التوضيح بالرسم.",
+          ans: `
+                <table class="notebook-table">
+                    <thead>
+                        <tr><th class="w-1/4">الخاصية</th><th>الشرح / التوضيح</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-bold">١. تحقيق الصالح العام</td>
+                            <td>تتعلق غايات الإدارة العامة وأهدافها أساساً بالصالح العام وفق إرادة أفراد الشعب.</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">٢. تكامل أهداف الإدارة العامة</td>
+                            <td>يجب أن تحقق التكامل بين أربعة أهداف: الأهداف الشخصية، الجماعية، التنظيمية، والعامة للمجتمع.</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">٣. تداخل الهياكل التنظيمية</td>
+                            <td>هيكل العلاقات الاجتماعية (الامتزاج) وهيكل العلاقات الوظيفية (أفراد يملكون نفوذ غیر السلطة الرسمية).</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">٤. صعوبة قياس الإنتاجية</td>
+                            <td>بسبب أن الناتج الذي تقدمه المنظمات العامة مرتبط بعوامل ومعايير معنوية للصالح العام يصعب قياسها بوضوح.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="mt-4 text-sm text-gray-500 italic">*ملاحظة: تضمن الحل في المحاضرة رسماً توضيحياً يربط هذه الخصائص (تحقيق الصالح العام، تكامل الأهداف، بيئة الإدارة، إنسانيتها، الخ).*</div>`,
+        },
+        {
+          id: "e2",
+          q: "السؤال الثاني: استعرض ثلاثة من العوامل المؤثرة في الإدارة العامة؟",
+          ans: `
+                <table class="notebook-table">
+                    <thead>
+                        <tr><th class="w-1/4">العامل المؤثر</th><th>الأثر في الإدارة العامة</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-bold text-blue-600 dark:text-blue-400">١. العوامل التاريخية</td>
+                            <td>يعكس النظام الإداري الظروف التاريخية للمجتمع، (مثل أثر الاستعمار على تشجيع التعليم النظري على حساب الفني).</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold text-blue-600 dark:text-blue-400">٢. العوامل الجغرافية</td>
+                            <td>اتساع مساحة الدولة وصعوبة الاتصال يستلزم الأخذ بأسلوب اللامركزية الإدارية، وتنعكس الطبيعة الجغرافية على السلوك.</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold text-blue-600 dark:text-blue-400">٣. العوامل الاجتماعية</td>
+                            <td>العادات والتقاليد والنظم والقيم السائدة تنعكس على الإدارة العامة وتؤثر فيها.</td>
+                        </tr>
+                    </tbody>
+                </table>`,
+        },
+        {
+          id: "e3",
+          q: "السؤال الثالث: ناقش باختصار وبالرسم التوضيحي لمنهج النظم في الإدارة العامة؟",
+          ans: `
+                <div class="mb-4">ينظر هذا المنهج إلى المنظمة الحكومية كجزء من النظام الإداري للدولة تتأثر بالبيئة وتؤثر فيها. يتكون من:</div>
+                <table class="notebook-table">
+                    <thead>
+                        <tr><th>العنصر</th><th>الوصف (حسب المحاضرة)</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="font-bold">المدخلات</td><td>احتياجات ورغبات المواطنين، الموارد، التأييد والمعارضة.</td></tr>
+                        <tr><td class="font-bold">عمليات التحويل</td><td>الهيكل التنظيمي، أساليب اتخاذ القرار، القيم والاتجاهات، أساليب الرقابة.</td></tr>
+                        <tr><td class="font-bold">المخرجات</td><td>سلع وخدمات عامة، جهود حكومية، قرارات وسياسات.</td></tr>
+                        <tr><td class="font-bold">التغذية المرتدة</td><td>كيفية تأثير المخرجات في المدخلات لتصحيح وتوجيه المسار.</td></tr>
+                    </tbody>
+                </table>`,
+        },
+        {
+          id: "e4",
+          q: "السؤال الرابع: ناقش باختصار اهم الأسباب التي أدت لنمو المنهج المقارن في الإدارة العامة.",
+          ans: `
+                <ul class="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
+                    <li><strong>أ)</strong> إمكانية نقل الخبرات الإدارية من مكان إلى آخر.</li>
+                    <li><strong>ب)</strong> ضرورة البحث في السلوك الإنساني من خلال المقارنات التحليلية.</li>
+                    <li><strong>ج)</strong> الدراسة المقارنة لوظيفة الدولة والطرق لزيادة فعالية إنجازها.</li>
+                    <li><strong>د)</strong> زيادة عدد الدول النامية التي تستفيد من التجارب الناجحة لدول مشابهة أو متقدمة.</li>
+                    <li><strong>هـ)</strong> قيام المنظمات الدولية بوضع مبادئ إدارية عامة تحظى بالتأييد من جميع دول العالم.</li>
+                </ul>`,
+        },
+        {
+          id: "e5",
+          q: "السؤال الخامس: وضع فايول أربعة عشر مبدأ للإدارة وضح هذه المبادئ ؟",
+          ans: `
+                <table class="notebook-table">
+                    <tbody>
+                        <tr>
+                            <td class="font-bold w-1/2">١. تقسيم العمل</td>
+                            <td class="font-bold w-1/2">٢. السلطة والمسؤولية</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">٣. النظام والتأديب</td>
+                            <td class="font-bold">٤. وحدة الأمر</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">٥. وحدة التوجيه</td>
+                            <td class="font-bold">٦. تفضيل الصالح العام على المصالح الشخصية</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">٧. التعويض والمكافأة العادلة</td>
+                            <td class="font-bold">٨. المركزية</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">٩. التدرج في السلطة (التسلسل الهرمي)</td>
+                            <td class="font-bold">١٠. المساواة بين الأفراد</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">١١. الترتيب</td>
+                            <td class="font-bold">١٢. ثبات الموظفين في العمل</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">١٣. المبادرة</td>
+                            <td class="font-bold">١٤. روح الجماعة</td>
+                        </tr>
+                    </tbody>
+                </table>`,
+        },
+      ];
+
+      // --- Application State ---
+      let correctAnswersCount = 0;
+      let answeredQuestionsCount = 0;
+      let consecutiveCorrectCount = 0; // For confetti trigger
+      const totalQuestionsCount = mcqData.length + tfData.length;
+
+      // --- Initialization ---
+      function initApp() {
+        document.getElementById("score-total").innerText = totalQuestionsCount;
+
+        renderMCQ();
+        renderTF();
+        renderEssay();
+
+        // Start the periodic 5-minute Zikr modal
+        setInterval(showZikrModal, 300000); // 300,000 ms = 5 minutes
+
+        // Initial dark mode setup based on user preference or system
+        if (
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        ) {
+          toggleDarkMode(true);
+        }
+      }
+
+      // --- UI Interactions & Logic ---
+
+      function switchTab(tabName) {
+        // Hide all sections
+        document.getElementById("section-mcq").classList.add("hidden");
+        document.getElementById("section-tf").classList.add("hidden");
+        document.getElementById("section-essay").classList.add("hidden");
+
+        // Remove active state from all tabs
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((btn) => btn.classList.remove("active"));
+
+        // Show selected section and activate tab
+        document
+          .getElementById(`section-${tabName}`)
+          .classList.remove("hidden");
+        document.getElementById(`tab-${tabName}`).classList.add("active");
+      }
+
+      function toggleDarkMode(forceDark = null) {
+        const htmlClass = document.documentElement.classList;
+        const icon = document.getElementById("theme-icon");
+
+        if (forceDark === true || !htmlClass.contains("dark")) {
+          htmlClass.add("dark");
+          htmlClass.remove("light");
+          icon.classList.remove("fa-moon");
+          icon.classList.add("fa-sun");
+        } else {
+          htmlClass.remove("dark");
+          htmlClass.add("light");
+          icon.classList.remove("fa-sun");
+          icon.classList.add("fa-moon");
+        }
+      }
+
+      function triggerConfetti() {
+        var duration = 3000;
+        var end = Date.now() + duration;
+
+        (function frame() {
+          confetti({
+            particleCount: 5,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ["#2563eb", "#10b981", "#f59e0b"],
+          });
+          confetti({
+            particleCount: 5,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ["#2563eb", "#10b981", "#f59e0b"],
+          });
+
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        })();
+      }
+
+      function handleAnswerRecord(isCorrect) {
+        if (isCorrect) {
+          correctAnswersCount++;
+          consecutiveCorrectCount++;
+          document.getElementById("score-correct").innerText =
+            correctAnswersCount;
+
+          // Trigger Confetti every 3 correct answers
+          if (
+            consecutiveCorrectCount % 3 === 0 &&
+            consecutiveCorrectCount > 0
+          ) {
+            triggerConfetti();
+          }
+        } else {
+          consecutiveCorrectCount = 0; // Reset streak
+        }
+      }
+
+      function toggleHint(btn) {
+        const hintBox = btn.nextElementSibling;
+        hintBox.classList.toggle("hidden");
+      }
+
+      // --- Render Functions ---
+
+      function renderMCQ() {
+        const container = document.getElementById("section-mcq");
+        container.innerHTML = "";
+
+        mcqData.forEach((item, index) => {
+          const card = document.createElement("div");
+          card.className =
+            "bg-white dark:bg-darkCard rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 md:p-8 relative transition-colors";
+
+          // Hint Button
+          const hintBtn = `
+                    <div class="absolute top-6 left-6 rtl:left-auto rtl:right-6">
+                        <button onclick="toggleHint(this)" class="text-orange-500 hover:text-orange-600 bg-orange-50 dark:bg-gray-800 rounded-full p-2 text-sm font-bold transition-colors" title="إظهار تلميح">
+                            <i class="fa-solid fa-lightbulb"></i> تلميح
+                        </button>
+                        <div class="hidden absolute top-full left-0 rtl:left-auto rtl:right-0 mt-2 w-48 bg-orange-100 dark:bg-gray-700 text-orange-800 dark:text-orange-200 text-xs p-3 rounded-lg shadow-lg z-10 border border-orange-200 dark:border-gray-600">
+                            ${item.hint}
+                        </div>
+                    </div>
+                `;
+
+          // Question Title
+          const qTitle = `<h3 class="text-lg md:text-xl font-bold mb-6 pr-14 text-gray-800 dark:text-gray-100"><span class="text-primary mr-1">${index + 1}.</span> ${item.q}</h3>`;
+
+          // Options
+          let optionsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="options-${item.id}">`;
+          item.options.forEach((opt, oIdx) => {
+            optionsHtml += `
+                        <button onclick="checkMCQ('${item.id}', ${oIdx}, ${item.ans})" class="opt-btn-${item.id} w-full text-right p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700 font-semibold text-gray-700 dark:text-gray-200 transition-all focus:outline-none flex justify-between items-center">
+                            <span>${opt}</span>
+                            <i class="icon-status fa-solid hidden"></i>
+                        </button>
+                    `;
+          });
+          optionsHtml += `</div>`;
+
+          // Explanation Box
+          const expBox = `
+                    <div id="exp-${item.id}" class="hidden mt-6 p-4 rounded-xl bg-blue-50 dark:bg-gray-800 border-r-4 border-primary text-gray-700 dark:text-gray-300 text-sm md:text-base leading-relaxed">
+                        <div class="font-bold text-primary mb-2"><i class="fa-solid fa-book-open"></i> التوضيح من المحاضرات:</div>
+                        ${item.explanation}
+                    </div>
+                `;
+
+          card.innerHTML = hintBtn + qTitle + optionsHtml + expBox;
+          container.appendChild(card);
+        });
+      }
+
+      function checkMCQ(qId, selectedIdx, correctIdx) {
+        const buttons = document.querySelectorAll(`.opt-btn-${qId}`);
+        let isCorrect = selectedIdx === correctIdx;
+
+        buttons.forEach((btn, idx) => {
+          btn.classList.add("btn-locked"); // Lock all
+          const icon = btn.querySelector(".icon-status");
+          icon.classList.remove("hidden");
+
+          if (idx === correctIdx) {
+            // Highlight correct option always
+            btn.classList.remove(
+              "bg-gray-50",
+              "dark:bg-gray-800",
+              "border-gray-100",
+              "dark:border-gray-700",
+            );
+            btn.classList.add(
+              "bg-emerald-100",
+              "dark:bg-emerald-900/30",
+              "border-emerald-500",
+              "text-emerald-800",
+              "dark:text-emerald-400",
+            );
+            icon.classList.add(
+              "fa-check",
+              "text-emerald-600",
+              "dark:text-emerald-400",
+            );
+          } else if (idx === selectedIdx && !isCorrect) {
+            // Highlight selected wrong option
+            btn.classList.remove(
+              "bg-gray-50",
+              "dark:bg-gray-800",
+              "border-gray-100",
+              "dark:border-gray-700",
+            );
+            btn.classList.add(
+              "bg-red-100",
+              "dark:bg-red-900/30",
+              "border-red-500",
+              "text-red-800",
+              "dark:text-red-400",
+            );
+            icon.classList.add("fa-xmark", "text-red-600", "dark:text-red-400");
+          } else {
+            icon.classList.add("hidden");
+          }
+        });
+
+        // Show explanation
+        document.getElementById(`exp-${qId}`).classList.remove("hidden");
+
+        handleAnswerRecord(isCorrect);
+      }
+
+      function renderTF() {
+        const container = document.getElementById("section-tf");
+        container.innerHTML = "";
+
+        tfData.forEach((item, index) => {
+          const card = document.createElement("div");
+          card.className =
+            "bg-white dark:bg-darkCard rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative transition-colors";
+
+          // Hint Button
+          const hintBtn = `
+                    <div class="absolute top-6 left-6 rtl:left-auto rtl:right-6">
+                        <button onclick="toggleHint(this)" class="text-orange-500 hover:text-orange-600 bg-orange-50 dark:bg-gray-800 rounded-full p-2 text-sm font-bold transition-colors">
+                            <i class="fa-solid fa-lightbulb"></i>
+                        </button>
+                        <div class="hidden absolute top-full left-0 rtl:left-auto rtl:right-0 mt-2 w-48 bg-orange-100 dark:bg-gray-700 text-orange-800 dark:text-orange-200 text-xs p-3 rounded-lg shadow-lg z-10 border border-orange-200 dark:border-gray-600">
+                            ${item.hint}
+                        </div>
+                    </div>
+                `;
+
+          const qTitle = `<h3 class="text-lg font-bold mb-6 pr-10 text-gray-800 dark:text-gray-100"><span class="text-primary mr-1">${index + 1}.</span> ${item.q}</h3>`;
+
+          const optionsHtml = `
+                    <div class="flex gap-4" id="options-${item.id}">
+                        <button onclick="checkTF('${item.id}', true, ${item.ans})" class="opt-btn-tf-${item.id} flex-1 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition flex justify-center items-center gap-2">
+                            صح <i class="icon-status fa-solid hidden"></i>
+                        </button>
+                        <button onclick="checkTF('${item.id}', false, ${item.ans})" class="opt-btn-tf-${item.id} flex-1 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition flex justify-center items-center gap-2">
+                            خطأ <i class="icon-status fa-solid hidden"></i>
+                        </button>
+                    </div>
+                `;
+
+          const expBox = `
+                    <div id="exp-tf-${item.id}" class="hidden mt-6 p-4 rounded-xl bg-blue-50 dark:bg-gray-800 border-r-4 border-primary text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                        <div class="font-bold text-primary mb-1"><i class="fa-solid fa-book-open"></i> التوضيح:</div>
+                        ${item.explanation}
+                    </div>
+                `;
+
+          card.innerHTML = hintBtn + qTitle + optionsHtml + expBox;
+          container.appendChild(card);
+        });
+      }
+
+      function checkTF(qId, selectedVal, correctVal) {
+        const buttons = document.querySelectorAll(`.opt-btn-tf-${qId}`);
+        let isCorrect = selectedVal === correctVal;
+
+        buttons.forEach((btn, idx) => {
+          btn.classList.add("btn-locked");
+          const isBtnTrue = idx === 0; // first btn is 'True'
+          const icon = btn.querySelector(".icon-status");
+          icon.classList.remove("hidden");
+
+          if (isBtnTrue === correctVal) {
+            btn.classList.add(
+              "bg-emerald-100",
+              "dark:bg-emerald-900/30",
+              "border-emerald-500",
+              "text-emerald-800",
+              "dark:text-emerald-400",
+            );
+            icon.classList.add("fa-check", "text-emerald-600");
+          } else if (isBtnTrue === selectedVal && !isCorrect) {
+            btn.classList.add(
+              "bg-red-100",
+              "dark:bg-red-900/30",
+              "border-red-500",
+              "text-red-800",
+              "dark:text-red-400",
+            );
+            icon.classList.add("fa-xmark", "text-red-600");
+          } else {
+            icon.classList.add("hidden");
+          }
+        });
+
+        document.getElementById(`exp-tf-${qId}`).classList.remove("hidden");
+        handleAnswerRecord(isCorrect);
+      }
+
+      function renderEssay() {
+        const container = document.getElementById("section-essay");
+        container.innerHTML = "";
+
+        essayData.forEach((item, index) => {
+          const card = document.createElement("div");
+          card.className =
+            "bg-white dark:bg-darkCard rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 md:p-8 transition-colors";
+
+          const qHtml = `
+                    <div class="flex items-start gap-3 mb-6">
+                        <div class="bg-gray-100 dark:bg-gray-800 text-primary px-3 py-1 rounded-lg font-bold">س ${index + 1}</div>
+                        <h3 class="text-lg md:text-xl font-bold text-gray-800 dark:text-gray-100 pt-1">${item.q}</h3>
+                    </div>
+                    <button onclick="toggleEssayAns('${item.id}', this)" class="bg-primary hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-eye"></i> أظهر الحل المعتمد
+                    </button>
+                    <div id="ans-essay-${item.id}" class="hidden mt-6 overflow-x-auto">
+                        ${item.ans}
+                    </div>
+                `;
+          card.innerHTML = qHtml;
+          container.appendChild(card);
+        });
+      }
+
+      function toggleEssayAns(qId, btn) {
+        const ansDiv = document.getElementById(`ans-essay-${qId}`);
+        if (ansDiv.classList.contains("hidden")) {
+          ansDiv.classList.remove("hidden");
+          btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> إخفاء الحل';
+          btn.classList.replace("bg-primary", "bg-gray-500");
+          btn.classList.replace("hover:bg-blue-700", "hover:bg-gray-600");
+        } else {
+          ansDiv.classList.add("hidden");
+          btn.innerHTML = '<i class="fa-solid fa-eye"></i> أظهر الحل المعتمد';
+          btn.classList.replace("bg-gray-500", "bg-primary");
+          btn.classList.replace("hover:bg-gray-600", "hover:bg-blue-700");
+        }
+      }
+
+      // --- Zikr Modal Logic (Every 5 minutes) ---
+      const zikrList = [
+        "اللهم لا سهل إلا ما جعلته سهلاً، وأنت تجعل الحزن إذا شئت سهلاً.",
+        "يا رب اكتب لنا الامتياز والنجاح والتوفيق في هذا المقرر.",
+        "اللهم ارزقني قوة الحفظ، وسرعة الفهم، وصفاء الذهن.",
+        "اللهم اشرح لي صدري، ويسر لي أمري، واحلل عقدة من لساني يفقهوا قولي.",
+        "سبحان الله وبحمده، سبحان الله العظيم.. استمر في تركيزك، أنت بطل!",
+      ];
+
+      let zikrIndex = 0;
+
+      function showZikrModal() {
+        const modal = document.getElementById("zikr-modal");
+        const zikrText = document.getElementById("zikr-text");
+
+        zikrText.innerText = zikrList[zikrIndex];
+        zikrIndex = (zikrIndex + 1) % zikrList.length;
+
+        modal.classList.remove("hidden");
+      }
+
+      function closeZikrModal() {
+        document.getElementById("zikr-modal").classList.add("hidden");
+      }
+
+      // Run Init
+      window.addEventListener("DOMContentLoaded", initApp);
+    </script>
+  </body>
+</html>
